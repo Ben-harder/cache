@@ -13,7 +13,7 @@ func TestCachePut(t *testing.T) {
 	value := "Bar"
 	newCache := NewCache(3)
 	newCache.Put(key, value)
-	assert.Equal(t, newCache.size, 1)
+	assert.Equal(t, newCache.Size(), 1)
 }
 
 // TestCachePuts tests multiple cache puts and ensures that cache size stays under capacity.
@@ -22,7 +22,7 @@ func TestCachePuts(t *testing.T) {
 	newCache.Put("one", 1)
 	newCache.Put("two", 2)
 	newCache.Put("three", 3)
-	assert.Equal(t, 3, newCache.size)
+	assert.Equal(t, 3, newCache.Size())
 }
 
 // TestCacheGet ensures that Cache.Get properly retrieves an item that exists, and throws an error for an item that doesn't.
@@ -44,14 +44,14 @@ func TestCacheEviction(t *testing.T) {
 	newCache.Put("one", 1)
 	newCache.Put("two", 2)
 	newCache.Put("three", 3)
-	assert.Equal(t, 3, newCache.size)
-	assert.Equal(t, 1, newCache.head.Data.(CacheItem).value)
-	assert.Equal(t, 3, newCache.tail.Data.(CacheItem).value)
+	assert.Equal(t, 3, newCache.Size())
+	assert.Equal(t, 1, newCache.LRUList.Head.Data.(CacheItem).value)
+	assert.Equal(t, 3, newCache.LRUList.Tail.Data.(CacheItem).value)
 
 	// Cause one to be evicted
 	newCache.Put("four", 4)
-	assert.Equal(t, 3, newCache.size)
-	assert.Equal(t, newCache.size, newCache.capacity)
+	assert.Equal(t, 3, newCache.Size())
+	assert.Equal(t, newCache.Size(), newCache.capacity)
 	assert.Equal(t, 3, len(newCache.itemMap))
 	_, ok := newCache.itemMap["one"]
 	assert.False(t, ok)
@@ -60,13 +60,13 @@ func TestCacheEviction(t *testing.T) {
 
 	// set two as most recently used
 	newCache.Put("two", 2)
-	assert.Equal(t, 2, newCache.tail.Data.(CacheItem).value)
+	assert.Equal(t, 2, newCache.LRUList.Tail.Data.(CacheItem).value)
 	fmt.Println(newCache)
 
 	// now cause three to be evicted
 	newCache.Put("five", 5)
-	fmt.Println(newCache)
-	assert.Equal(t, 5, newCache.tail.Data.(CacheItem).value)
+	fmt.Println(newCache.LRUList.Tail.Data)
+	assert.Equal(t, 5, newCache.LRUList.Tail.Data.(CacheItem).value)
 	_, err = newCache.Get("three")
 	assert.Error(t, err)
 }

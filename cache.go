@@ -40,9 +40,7 @@ type CacheItem struct {
 
 type Cache struct {
 	itemMap  map[Key]*doubleLinkedList.Node
-	tail     *doubleLinkedList.Node
-	head     *doubleLinkedList.Node
-	size     int
+	LRUList  *doubleLinkedList.List
 	capacity int
 }
 
@@ -50,6 +48,7 @@ func NewCache(capacity int) *Cache {
 	return &Cache{
 		capacity: capacity,
 		itemMap:  make(map[Key]*doubleLinkedList.Node),
+		LRUList:  new(doubleLinkedList.List),
 	}
 }
 
@@ -66,36 +65,23 @@ func (c *Cache) Get(key Key) (CacheValue, error) {
 }
 
 func (c *Cache) setMostRecent(n *doubleLinkedList.Node) {
-	// If the cache is empty, the tail is the head is now the most recent
-	if c.tail == nil {
-		c.tail = n
-		return
-	}
-	c.tail.Next = n
-	n.Prev = c.tail
-	c.tail = n
-
+	// First remove the node, then send it to the back
+	c.LRUList.Remove(n)
+	c.LRUList.InsertEnd(n)
 }
 
 func (c *Cache) evict() {
-	temp := c.head
-	c.head = c.head.Next
-	c.head.Prev = nil
-	log.Printf("evicting LRU from cache %v\n", temp.Data.(CacheItem))
-	delete(c.itemMap, temp.Data.(CacheItem).key)
-	c.size -= 1
+	head := c.LRUList.Head
+	log.Printf("evicting LRU from cache %v\n", head.Data.(CacheItem))
+	c.LRUList.Remove(head)
+	delete(c.itemMap, head.Data.(CacheItem).key)
 }
 
 // insert puts a new item into the cache
 func (c *Cache) insert(key Key, item CacheValue) {
-	newNode := &doubleLinkedList.Node{Prev: c.tail, Data: CacheItem{key: key, value: item}}
-	// If the cache is empty, the tail is the head is now the most recent
-	if c.head == nil {
-		c.head = newNode
-	}
-	c.setMostRecent(newNode)
+	newNode := &doubleLinkedList.Node{Data: CacheItem{key: key, value: item}}
+	c.LRUList.InsertEnd(newNode)
 	c.itemMap[key] = newNode
-	c.size += 1
 }
 
 func (c *Cache) Put(key Key, item CacheValue) {
@@ -107,8 +93,12 @@ func (c *Cache) Put(key Key, item CacheValue) {
 	}
 
 	// Check if the cache is full and evict the LRU item if it is
-	if c.size == c.capacity {
+	if c.Size() == c.capacity {
 		c.evict()
 	}
 	c.insert(key, item)
+}
+
+func (c *Cache) Size() int {
+	return c.LRUList.Size
 }

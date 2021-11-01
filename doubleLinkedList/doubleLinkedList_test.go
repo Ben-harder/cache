@@ -1,6 +1,7 @@
 package doubleLinkedList
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -26,6 +27,9 @@ func TestListOperations(t *testing.T) {
 	node4 := &Node{
 		Data: "4",
 	}
+	node5 := &Node{
+		Data: "5",
+	}
 	// Testing multiple inserts
 	testList.InsertBeginning(node2)
 	testList.InsertBeginning(node3)
@@ -39,4 +43,9 @@ func TestListOperations(t *testing.T) {
 	assert.Equal(t, 2, testList.Size)
 	assert.Equal(t, node2.Prev, node4)
 	assert.Equal(t, node4.Next, node2)
+
+	// Testing insert end
+	testList.InsertEnd(node5)
+	assert.Equal(t, "5", testList.Tail.Data)
+	fmt.Println(testList.AsSlice())
 }

@@ -73,3 +73,14 @@ func (l *List) Remove(node *Node) {
 	}
 	l.Size -= 1
 }
+
+// Returns a slice of the list's nodes in order
+func (l *List) AsSlice() []*Node {
+	curr := l.Head
+	nodeSlice := make([]*Node, 0)
+	for curr != nil {
+		nodeSlice = append(nodeSlice, curr)
+		curr = curr.Next
+	}
+	return nodeSlice
+}

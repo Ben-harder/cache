@@ -71,6 +71,8 @@ func (l *List) Remove(node *Node) {
 	} else {
 		node.Next.Prev = node.Prev
 	}
+	node.Next = nil
+	node.Prev = nil
 	l.Size -= 1
 }
 

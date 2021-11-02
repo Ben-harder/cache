@@ -45,8 +45,8 @@ func TestCacheEviction(t *testing.T) {
 	newCache.Put("two", 2)
 	newCache.Put("three", 3)
 	assert.Equal(t, 3, newCache.Size())
-	assert.Equal(t, 1, newCache.LRUList.Head.Data.(CacheItem).value)
-	assert.Equal(t, 3, newCache.LRUList.Tail.Data.(CacheItem).value)
+	assert.Equal(t, 1, newCache.LRUList.Head.Data.(Item).value)
+	assert.Equal(t, 3, newCache.LRUList.Tail.Data.(Item).value)
 
 	// Cause one to be evicted
 	newCache.Put("four", 4)
@@ -60,13 +60,12 @@ func TestCacheEviction(t *testing.T) {
 
 	// set two as most recently used
 	newCache.Put("two", 2)
-	assert.Equal(t, 2, newCache.LRUList.Tail.Data.(CacheItem).value)
+	assert.Equal(t, 2, newCache.LRUList.Tail.Data.(Item).value)
 	fmt.Println(newCache)
 
 	// now cause three to be evicted
 	newCache.Put("five", 5)
-	fmt.Println(newCache.LRUList.Tail.Data)
-	assert.Equal(t, 5, newCache.LRUList.Tail.Data.(CacheItem).value)
+	assert.Equal(t, 5, newCache.LRUList.Tail.Data.(Item).value)
 	_, err = newCache.Get("three")
 	assert.Error(t, err)
 }

@@ -24,26 +24,28 @@ import (
 //	size int
 //	capacity int
 
-// Get(CacheItem) error
+// Get(Item) error
 // 	check map to see if key exists
 // 		If it does, then pull the node pointer from the map, then the value from the node pointer. Attach the node to the end of the list.
 //	otherwise, return some fail code
 
 type Key interface{}
 
-type CacheValue interface{}
+type Value interface{}
 
-type CacheItem struct {
+type Item struct {
 	key   Key
-	value CacheValue
+	value Value
 }
 
+// LRU Cache implemented with a doubly linked list to hold data and a map for O(1) access.
 type Cache struct {
 	itemMap  map[Key]*doubleLinkedList.Node
 	LRUList  *doubleLinkedList.List
 	capacity int
 }
 
+// Returns an initialized, empty cache.
 func NewCache(capacity int) *Cache {
 	return &Cache{
 		capacity: capacity,
@@ -52,15 +54,15 @@ func NewCache(capacity int) *Cache {
 	}
 }
 
-// Get will return the CacheValue given a key and an error if the item wasn't in the cache.
-func (c *Cache) Get(key Key) (CacheValue, error) {
+// Get will return the Value given a key and an error if the item wasn't in the cache.
+func (c *Cache) Get(key Key) (Value, error) {
 	n, ok := c.itemMap[key]
 	if !ok {
 		return nil, fmt.Errorf("item not found")
 	}
-	// set CacheItem as most recent
+	// set Item as most recent
 	c.setMostRecent(n)
-	val := n.Data.(CacheItem).value
+	val := n.Data.(Item).value
 	return val, nil
 }
 
@@ -72,19 +74,20 @@ func (c *Cache) setMostRecent(n *doubleLinkedList.Node) {
 
 func (c *Cache) evict() {
 	head := c.LRUList.Head
-	log.Printf("evicting LRU from cache %v\n", head.Data.(CacheItem))
+	log.Printf("evicting LRU from cache %v\n", head.Data.(Item))
 	c.LRUList.Remove(head)
-	delete(c.itemMap, head.Data.(CacheItem).key)
+	delete(c.itemMap, head.Data.(Item).key)
 }
 
 // insert puts a new item into the cache
-func (c *Cache) insert(key Key, item CacheValue) {
-	newNode := &doubleLinkedList.Node{Data: CacheItem{key: key, value: item}}
+func (c *Cache) insert(key Key, item Value) {
+	newNode := &doubleLinkedList.Node{Data: Item{key: key, value: item}}
 	c.LRUList.InsertEnd(newNode)
 	c.itemMap[key] = newNode
 }
 
-func (c *Cache) Put(key Key, item CacheValue) {
+// Put inserts a new item into the cache if it is not already present and sets it as the most recent item. Will evict the LRU if cache is full.
+func (c *Cache) Put(key Key, item Value) {
 	n, ok := c.itemMap[key]
 	if ok {
 		// We already have the item in cache

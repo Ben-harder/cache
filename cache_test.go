@@ -52,8 +52,8 @@ func TestCacheEviction(t *testing.T) {
 	newCache.Put("four", 4)
 	assert.Equal(t, 3, newCache.Size())
 	assert.Equal(t, newCache.Size(), newCache.capacity)
-	assert.Equal(t, 3, len(newCache.itemMap))
-	_, ok := newCache.itemMap["one"]
+	assert.Equal(t, 3, len(newCache.nodeMap))
+	_, ok := newCache.nodeMap["one"]
 	assert.False(t, ok)
 	_, err := newCache.Get("one")
 	assert.Error(t, err)
